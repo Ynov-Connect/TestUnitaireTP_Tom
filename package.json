@@ -1,0 +1,19 @@
+{
+  "name": "validator-tdd",
+  "version": "1.0.0",
+  "description": "Module de validation TDD avec Jest et JSDoc",
+  "main": "validator.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "doc": "jsdoc -c jsdoc.json"
+  },
+  "keywords": ["validation", "tdd", "jest"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdoc": "^4.0.2"
+  }
+}

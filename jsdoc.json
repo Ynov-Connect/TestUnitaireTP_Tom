@@ -1,0 +1,16 @@
+{
+  "source": {
+    "include": ["validator.js"],
+    "includePattern": ".js$"
+  },
+  "opts": {
+    "destination": "./docs",
+    "recurse": true,
+    "readme": "README.md"
+  },
+  "plugins": [],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false
+  }
+}
