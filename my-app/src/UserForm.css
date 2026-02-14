@@ -1,0 +1,95 @@
+.user-form-container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+.user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+input {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+input.error {
+  border-color: #e74c3c;
+  background-color: #ffe5e5;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 5px;
+  display: block;
+}
+
+.submit-button {
+  padding: 14px 30px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 10px;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #357abd;
+  transform: translateY(-2px);
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.Toastify__toast--success {
+  background-color: #27ae60;
+}
+
+.Toastify__toast--error {
+  background-color: #e74c3c;
+}
