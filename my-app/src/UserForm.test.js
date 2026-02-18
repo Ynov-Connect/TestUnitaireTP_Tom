@@ -1,8 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { toast } from 'react-toastify';
 import UserForm from './UserForm';
 
 jest.mock('react-toastify', () => ({
@@ -395,13 +394,10 @@ describe('UserForm - Tests d\'intégration', () => {
     test('gère la soumission avec validation des erreurs', async () => {
       render(<UserForm />);
 
-      const submitButton = screen.getByRole('button', { name: /soumettre/i });
-
       fireEvent.change(screen.getByLabelText(/^prénom/i), { target: { value: 'Jean123' } });
       fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'invalide' } });
 
-      const form = submitButton.closest('form');
-      fireEvent.submit(form);
+      fireEvent.submit(screen.getByTestId('registration-form'));
 
       await waitFor(() => {
         expect(localStorageMock.setItem).not.toHaveBeenCalled();

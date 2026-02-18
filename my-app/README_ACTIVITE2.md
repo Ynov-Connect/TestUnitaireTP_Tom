@@ -1,4 +1,6 @@
-# Activité 2 - Tests d'Intégration React
+# Activité 2 & 3 - Tests d'Intégration React + E2E CI/CD
+
+[![CI](https://github.com/Ynov-Connect/TestUnitaireTP_Tom/actions/workflows/ci.yml/badge.svg)](https://github.com/Ynov-Connect/TestUnitaireTP_Tom/actions/workflows/ci.yml)
 
 ## Vue d'ensemble
 

@@ -81,7 +81,7 @@ function validateAge(birthDate) {
   }
 
   // Vérification du type
-  if (typeof birthDate === 'number' || typeof birthDate === 'string' && birthDate.trim() === '') {
+  if (typeof birthDate === 'number' || (typeof birthDate === 'string' && birthDate.trim() === '')) {
     throw new ValidationError(
       'INVALID_DATE',
       'Format de date invalide'
@@ -271,7 +271,7 @@ function validateIdentity(identity) {
 
   // Format valide: lettres (avec accents), tirets, apostrophes, espaces
   // Rejette: chiffres et caractères spéciaux
-  const identityRegex = /^[a-zA-ZÀ-ÿ\u00C0-\u017F\s'\-]+$/;
+  const identityRegex = /^[a-zA-ZÀ-ÿ\u00C0-\u017F\s'-]+$/;
   
   if (!identityRegex.test(identity)) {
     throw new ValidationError(

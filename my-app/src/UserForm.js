@@ -120,7 +120,7 @@ const UserForm = () => {
   return (
     <div className="user-form-container">
       <h1>Formulaire d'inscription</h1>
-      <form onSubmit={handleSubmit} className="user-form">
+      <form onSubmit={handleSubmit} className="user-form" data-testid="registration-form">
         {/* Prénom */}
         <div className="form-group">
           <label htmlFor="firstName">Prénom *</label>

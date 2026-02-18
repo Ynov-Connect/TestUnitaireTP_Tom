@@ -1,0 +1,99 @@
+name: Build, Test and Deploy React Application
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ============================================================
+  # Job 1 : Build + Lint + Tests UT/IT + JSDoc + Coverage
+  # ============================================================
+  build_test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    defaults:
+      run:
+        working-directory: my-app
+
+    # Permissions nécessaires pour GitHub Pages
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: my-app/package-lock.json
+
+      - name: npm ci, build and test
+        run: |
+          npm ci
+          npm run lint
+          npm run build --if-present
+          npm test -- --watchAll=false --runInBand --coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          directory: my-app/coverage
+          fail_ci_if_error: false
+
+      - name: Upload rapport de couverture (artefact)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: my-app/coverage/
+          if-no-files-found: warn
+
+      - name: Generate JSDoc
+        run: npm run jsdoc
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact (build + docs)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: my-app/build
+          if-no-files-found: error
+
+  # ============================================================
+  # Job 2 : Déploiement GitHub Pages — nécessite build_test OK
+  # ============================================================
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build_test
+
+    # Déployer sur l'environnement github-pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Grant GITHUB_TOKEN the permissions required to make a page deployment
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
