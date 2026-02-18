@@ -8,7 +8,7 @@ on:
 
 jobs:
   # ============================================================
-  # Job 1 : Build + Lint + Tests UT/IT + JSDoc + Coverage
+  # Job 1 : Build → Test → Coverage → JSDoc → Artifact
   # ============================================================
   build_test:
     name: Build and Test
@@ -22,10 +22,7 @@ jobs:
       run:
         working-directory: my-app
 
-    # Permissions nécessaires pour GitHub Pages
     permissions:
-      pages: write
-      id-token: write
       contents: read
 
     steps:
@@ -39,12 +36,20 @@ jobs:
           cache: 'npm'
           cache-dependency-path: my-app/package-lock.json
 
-      - name: npm ci, build and test
-        run: |
-          npm ci
-          npm run lint
-          npm run build --if-present
-          npm test -- --watchAll=false --runInBand --coverage
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Linting
+        run: npm run lint
+
+      - name: Generate JSDoc (dans public/docs avant le build)
+        run: npm run jsdoc
+
+      - name: Build application React (inclut public/docs → build/docs)
+        run: npm run build
+
+      - name: Tests Unitaires et Intégration (avec couverture)
+        run: npm test -- --watchAll=false --runInBand --coverage
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
@@ -62,14 +67,11 @@ jobs:
           path: my-app/coverage/
           if-no-files-found: warn
 
-      - name: Generate JSDoc
-        run: npm run jsdoc
-
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
 
-      - name: Upload artifact (build + docs)
+      - name: Upload artifact (app + docs)
         uses: actions/upload-pages-artifact@v3
         with:
           path: my-app/build
@@ -83,12 +85,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_test
 
-    # Déployer sur l'environnement github-pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    # Grant GITHUB_TOKEN the permissions required to make a page deployment
     permissions:
       pages: write
       id-token: write
