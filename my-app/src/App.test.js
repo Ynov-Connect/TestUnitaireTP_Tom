@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders the user form', () => {
+test('renders the home page with user count', () => {
   render(<App />);
-  const heading = screen.getByText(/formulaire d'inscription/i);
-  expect(heading).toBeInTheDocument();
+  const userCount = screen.getByText(/user\(s\) already registered/i);
+  expect(userCount).toBeInTheDocument();
 });
