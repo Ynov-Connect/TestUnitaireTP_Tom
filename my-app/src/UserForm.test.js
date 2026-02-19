@@ -1,8 +1,19 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import UserForm from './UserForm';
+import { UsersProvider } from './UsersContext';
+
+const renderUserForm = () =>
+  render(
+    <UsersProvider>
+      <MemoryRouter>
+        <UserForm />
+      </MemoryRouter>
+    </UsersProvider>
+  );
 
 jest.mock('react-toastify', () => ({
   toast: {
@@ -27,7 +38,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
   describe('Affichage initial du formulaire', () => {
     test('affiche tous les champs requis', () => {
-      render(<UserForm />);
+      renderUserForm();
 
       expect(screen.getByLabelText(/^prénom/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^nom \*/i)).toBeInTheDocument();
@@ -38,7 +49,7 @@ describe('UserForm - Tests d\'intégration', () => {
     });
 
     test('le bouton de soumission est désactivé initialement', () => {
-      render(<UserForm />);
+      renderUserForm();
       const submitButton = screen.getByRole('button', { name: /soumettre/i });
       expect(submitButton).toBeDisabled();
     });
@@ -47,7 +58,7 @@ describe('UserForm - Tests d\'intégration', () => {
   describe('Validation en temps réel - Scénarios chaotiques', () => {
     test('affiche une erreur quand un prénom invalide est saisi puis corrige', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const firstNameInput = screen.getByLabelText(/prénom/i);
 
@@ -74,7 +85,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('détecte une tentative XSS dans le prénom', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const firstNameInput = screen.getByLabelText(/prénom/i);
 
@@ -88,7 +99,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('valide un email invalide puis le corrige', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const emailInput = screen.getByLabelText(/email/i);
 
@@ -113,7 +124,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('rejette un âge inférieur à 18 ans', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const birthDateInput = screen.getByLabelText(/date de naissance/i);
 
@@ -135,7 +146,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('valide un code postal invalide (pas 5 chiffres)', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const postalCodeInput = screen.getByLabelText(/code postal/i);
 
@@ -160,7 +171,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('rejette un code postal avec des lettres', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const postalCodeInput = screen.getByLabelText(/code postal/i);
 
@@ -176,7 +187,7 @@ describe('UserForm - Tests d\'intégration', () => {
   describe('Utilisateur chaotique - Scénario complet', () => {
     test('remplit le formulaire de manière désordonnée avec erreurs et corrections', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const firstNameInput = screen.getByLabelText(/^prénom/i);
       const lastNameInput = screen.getByLabelText(/^nom \*/i);
@@ -236,7 +247,7 @@ describe('UserForm - Tests d\'intégration', () => {
   describe('Soumission du formulaire et état du bouton', () => {
     test('le bouton reste désactivé si tous les champs ne sont pas remplis', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const firstNameInput = screen.getByLabelText(/prénom/i);
       const submitButton = screen.getByRole('button', { name: /soumettre/i });
@@ -249,7 +260,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('le bouton s\'active quand tous les champs sont valides', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const submitButton = screen.getByRole('button', { name: /soumettre/i });
       
@@ -277,7 +288,7 @@ describe('UserForm - Tests d\'intégration', () => {
   describe('Tests de régression et cas limites', () => {
     test('gère les caractères accentués dans les noms', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const firstNameInput = screen.getByLabelText(/^prénom/i);
 
@@ -294,7 +305,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('accepte les noms composés avec tirets', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const lastNameInput = screen.getByLabelText(/^nom \*/i);
 
@@ -311,7 +322,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('accepte les apostrophes dans les noms', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const lastNameInput = screen.getByLabelText(/^nom \*/i);
 
@@ -328,7 +339,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('valide un utilisateur de 18 ans exactement', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const birthDateInput = screen.getByLabelText(/date de naissance/i);
 
@@ -355,7 +366,7 @@ describe('UserForm - Tests d\'intégration', () => {
   describe('Tests du DOM et accessibilité', () => {
     test('les erreurs sont visibles et identifiables avec role="alert"', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const emailInput = screen.getByLabelText(/^email/i);
 
@@ -369,7 +380,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
     test('les champs en erreur ont la classe "error"', async () => {
       const user = userEvent.setup();
-      render(<UserForm />);
+      renderUserForm();
 
       const emailInput = screen.getByLabelText(/email/i);
 
@@ -382,7 +393,7 @@ describe('UserForm - Tests d\'intégration', () => {
     });
 
     test('le bouton a un état visuellement différent quand désactivé', () => {
-      render(<UserForm />);
+      renderUserForm();
 
       const submitButton = screen.getByRole('button', { name: /soumettre/i });
       expect(submitButton).toBeDisabled();
@@ -392,7 +403,7 @@ describe('UserForm - Tests d\'intégration', () => {
 
   describe('Soumission complète du formulaire', () => {
     test('gère la soumission avec validation des erreurs', async () => {
-      render(<UserForm />);
+      renderUserForm();
 
       fireEvent.change(screen.getByLabelText(/^prénom/i), { target: { value: 'Jean123' } });
       fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'invalide' } });
@@ -409,5 +420,41 @@ describe('UserForm - Tests d\'intégration', () => {
       });
     });
 
+    test('soumet le formulaire avec succès, affiche le toast et réinitialise le formulaire', async () => {
+      const { toast } = require('react-toastify');
+      const user = userEvent.setup();
+      renderUserForm();
+
+      await user.type(screen.getByLabelText(/^prénom/i), 'Jean');
+      await user.type(screen.getByLabelText(/^nom \*/i), 'Dupont');
+      await user.type(screen.getByLabelText(/^email/i), 'jean.dupont@example.com');
+
+      const validDate = new Date();
+      validDate.setFullYear(validDate.getFullYear() - 25);
+      await user.type(
+        screen.getByLabelText(/date de naissance/i),
+        validDate.toISOString().split('T')[0]
+      );
+      await user.type(screen.getByLabelText(/code postal/i), '75001');
+      await user.type(screen.getByLabelText(/^ville/i), 'Paris');
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /soumettre/i })).not.toBeDisabled();
+      }, { timeout: 3000 });
+
+      await user.click(screen.getByRole('button', { name: /soumettre/i }));
+
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith(
+          'Formulaire soumis avec succès !',
+          expect.any(Object)
+        );
+      });
+
+      // Le formulaire est réinitialisé après soumission réussie
+      await waitFor(() => {
+        expect(screen.getByLabelText(/^prénom/i)).toHaveValue('');
+      });
+    });
   });
 });

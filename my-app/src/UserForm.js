@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
   validateAge,
@@ -6,9 +7,13 @@ import {
   validateIdentity,
   validateEmail,
 } from './validator';
+import { useUsers } from './UsersContext';
 import './UserForm.css';
 
 const UserForm = () => {
+  const navigate = useNavigate();
+  const { addUser } = useUsers();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -98,7 +103,7 @@ const UserForm = () => {
       return;
     }
 
-    localStorage.setItem('userData', JSON.stringify(formData));
+    addUser(formData);
 
     toast.success('Formulaire soumis avec succès !', {
       position: 'top-right',
@@ -115,6 +120,7 @@ const UserForm = () => {
     });
     setErrors({});
     setTouched({});
+    navigate('/');
   };
 
   return (
