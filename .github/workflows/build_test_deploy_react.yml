@@ -102,6 +102,7 @@ jobs:
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 60
         env:
+          PUBLIC_URL: /
           BROWSER: none
           REACT_APP_API_URL: https://jsonplaceholder.typicode.com
 
