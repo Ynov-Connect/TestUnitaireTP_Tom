@@ -3,8 +3,31 @@ import { Link } from 'react-router-dom';
 import { useUsers } from './UsersContext';
 import './HomePage.css';
 
+const getUserDisplayName = (user) => {
+  if (user.lastName || user.firstName) {
+    return `${user.lastName || ''} ${user.firstName || ''}`.trim();
+  }
+  return user.name || user.username || user.email || 'Utilisateur';
+};
+
 const HomePage = () => {
-  const { users } = useUsers();
+  const { users, loading, error } = useUsers();
+
+  if (loading) {
+    return (
+      <div className="home-container">
+        <p data-cy="loading">Chargement...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="home-container">
+        <p data-cy="error" className="error-message">Erreur : {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="home-container">
@@ -18,7 +41,7 @@ const HomePage = () => {
         <ul className="users-list" data-cy="users-list">
           {users.map((user, index) => (
             <li key={index} data-cy="user-item" className="user-item">
-              {user.lastName} {user.firstName}
+              {getUserDisplayName(user)}
             </li>
           ))}
         </ul>

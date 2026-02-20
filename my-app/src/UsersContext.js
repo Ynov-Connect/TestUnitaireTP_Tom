@@ -1,29 +1,37 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getUsers, createUser } from './api';
 
-export const UsersContext = createContext({ users: [], addUser: () => {} });
+export const UsersContext = createContext({
+  users: [],
+  addUser: () => {},
+  loading: false,
+  error: null,
+});
 
 export const UsersProvider = ({ children }) => {
-  const [users, setUsers] = useState(() => {
-    try {
-      const stored = localStorage.getItem('users');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const addUser = (user) => {
-    const newUsers = [...users, user];
-    setUsers(newUsers);
-    localStorage.setItem('users', JSON.stringify(newUsers));
+  useEffect(() => {
+    setLoading(true);
+    getUsers()
+      .then((data) => setUsers(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const addUser = async (userData) => {
+    const newUser = await createUser(userData);
+    setUsers((prev) => [...prev, newUser]);
+    return newUser;
   };
 
   return (
-    <UsersContext.Provider value={{ users, addUser }}>
+    <UsersContext.Provider value={{ users, addUser, loading, error }}>
       {children}
     </UsersContext.Provider>
   );
 };
 
 export const useUsers = () => useContext(UsersContext);
-

@@ -84,7 +84,7 @@ const UserForm = () => {
     setIsValid(allFieldsFilled && noErrors);
   }, [formData, validateField]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
@@ -103,24 +103,31 @@ const UserForm = () => {
       return;
     }
 
-    addUser(formData);
+    try {
+      await addUser(formData);
 
-    toast.success('Formulaire soumis avec succès !', {
-      position: 'top-right',
-      autoClose: 3000,
-    });
+      toast.success('Formulaire soumis avec succès !', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
 
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      birthDate: '',
-      postalCode: '',
-      city: '',
-    });
-    setErrors({});
-    setTouched({});
-    navigate('/');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        birthDate: '',
+        postalCode: '',
+        city: '',
+      });
+      setErrors({});
+      setTouched({});
+      navigate('/');
+    } catch (err) {
+      toast.error("Erreur lors de l'inscription. Veuillez réessayer.", {
+        position: 'top-right',
+        autoClose: 5000,
+      });
+    }
   };
 
   return (

@@ -4,35 +4,31 @@ import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import UserForm from './UserForm';
-import { UsersProvider } from './UsersContext';
-
-const renderUserForm = () =>
-  render(
-    <UsersProvider>
-      <MemoryRouter>
-        <UserForm />
-      </MemoryRouter>
-    </UsersProvider>
-  );
+import { UsersContext } from './UsersContext';
 
 jest.mock('react-toastify', () => ({
   toast: {
     success: jest.fn(),
+    error: jest.fn(),
   },
   ToastContainer: () => null,
 }));
 
+let mockAddUser;
+
+const renderUserForm = () => {
+  mockAddUser = jest.fn(() => Promise.resolve({ id: 11 }));
+  return render(
+    <UsersContext.Provider value={{ users: [], addUser: mockAddUser, loading: false, error: null }}>
+      <MemoryRouter>
+        <UserForm />
+      </MemoryRouter>
+    </UsersContext.Provider>
+  );
+};
+
 describe('UserForm - Tests d\'intégration', () => {
-  let localStorageMock;
-
   beforeEach(() => {
-    localStorageMock = {
-      getItem: jest.fn(),
-      setItem: jest.fn(),
-      clear: jest.fn(),
-    };
-    global.localStorage = localStorageMock;
-
     jest.clearAllMocks();
   });
 
@@ -411,7 +407,7 @@ describe('UserForm - Tests d\'intégration', () => {
       fireEvent.submit(screen.getByTestId('registration-form'));
 
       await waitFor(() => {
-        expect(localStorageMock.setItem).not.toHaveBeenCalled();
+        expect(mockAddUser).not.toHaveBeenCalled();
       });
 
       await waitFor(() => {

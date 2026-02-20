@@ -135,10 +135,11 @@ my-app/
 - **React 19** – UI
 - **React Router DOM v6** – Navigation SPA multi-pages
 - **React Context** – Gestion d'état partagé (liste des inscrits)
+- **axios** – Appels API REST (JSONPlaceholder)
 - **react-toastify** – Notifications
 - **Jest + React Testing Library** – Tests UT/IT
-- **Cypress** – Tests E2E
-- **@faker-js/faker** – Données anonymisées RGPD
+- **jest.mock / mockImplementationOnce** – Simulation des appels axios
+- **Cypress + cy.intercept** – Tests E2E avec interception réseau
 - **ESLint** – Linting
 - **JSDoc** – Documentation
 - **GitHub Actions** – CI/CD
