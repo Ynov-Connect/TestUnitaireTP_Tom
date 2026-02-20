@@ -78,7 +78,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: my-app/build
-          if-no-files-found: error
 
   # ============================================================
   # Job 2 : Tests E2E (Cypress) — nécessite build_test OK
