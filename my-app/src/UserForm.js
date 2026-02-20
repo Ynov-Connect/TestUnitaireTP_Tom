@@ -123,7 +123,19 @@ const UserForm = () => {
       setTouched({});
       navigate('/');
     } catch (err) {
-      toast.error("Erreur lors de l'inscription. Veuillez réessayer.", {
+      const status = err.response?.status;
+      let errorMessage;
+
+      if (status === 400) {
+        errorMessage =
+          err.response?.data?.message ||
+          "L'email existe déjà. Veuillez en utiliser un autre.";
+      } else {
+        errorMessage =
+          "Erreur serveur. L'inscription a échoué, veuillez réessayer plus tard.";
+      }
+
+      toast.error(errorMessage, {
         position: 'top-right',
         autoClose: 5000,
       });

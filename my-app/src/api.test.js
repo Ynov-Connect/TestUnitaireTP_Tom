@@ -70,13 +70,33 @@ describe("API - Tests d'intégration avec axios mocké", () => {
       );
     });
 
-    test('lève une erreur en cas d\'échec lors de la création', async () => {
-      axios.post.mockImplementationOnce(() =>
-        Promise.reject(new Error('Server Error'))
-      );
+    test('lève une erreur 400 (email déjà utilisé) avec message spécifique', async () => {
+      const error = {
+        response: {
+          status: 400,
+          data: { message: "L'email existe déjà." },
+        },
+      };
+      axios.post.mockImplementationOnce(() => Promise.reject(error));
 
-      await expect(createUser({})).rejects.toThrow('Server Error');
+      await expect(createUser({ email: 'alice@test.com' })).rejects.toMatchObject({
+        response: { status: 400 },
+      });
       expect(axios.post).toHaveBeenCalledTimes(1);
+    });
+
+    test('lève une erreur 500 (crash serveur)', async () => {
+      const error = {
+        response: {
+          status: 500,
+          data: { message: 'Internal Server Error' },
+        },
+      };
+      axios.post.mockImplementationOnce(() => Promise.reject(error));
+
+      await expect(createUser({})).rejects.toMatchObject({
+        response: { status: 500 },
+      });
     });
 
     test('mockImplementationOnce - comportements différents sur plusieurs appels', async () => {

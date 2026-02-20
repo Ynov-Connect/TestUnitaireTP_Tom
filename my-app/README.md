@@ -69,6 +69,40 @@ La doc est générée dans `public/docs/` et accessible à `/docs` une fois l'ap
 
 ---
 
+## Stratégie de Mocking (Isolation des tests)
+
+Les tests Jest n'effectuent **aucun appel réseau réel**. Toutes les dépendances externes sont simulées :
+
+| Fichier de test | Ce qui est mocké | Comment |
+|---|---|---|
+| `api.test.js` | `axios` | `jest.mock('axios')` + `mockImplementationOnce` |
+| `UsersContext.test.js` | module `./api` | `jest.mock('./api')` |
+| `UserForm.test.js` | `addUser` du contexte | `UsersContext.Provider` avec mock |
+| `App.test.js` | module `./api` | `jest.mock('./api')` |
+| `HomePage.test.js` | contexte complet | `UsersContext.Provider` avec données statiques |
+
+### Cas testés dans `api.test.js`
+
+| Cas | Code HTTP | Description |
+|---|---|---|
+| Succès GET | 200 | Retourne la liste des utilisateurs |
+| Succès POST | 201 | Retourne l'utilisateur créé avec son `id` |
+| Erreur métier POST | 400 | Email déjà utilisé — message spécifique retourné |
+| Crash serveur POST | 500 | Serveur indisponible — erreur propagée |
+| Erreur réseau | — | Pas de connexion — erreur propagée |
+
+### Cas testés dans `UserForm.test.js`
+
+| Scénario | Comportement attendu |
+|---|---|
+| Succès (200/201) | Toast succès, formulaire réinitialisé, navigation vers `/` |
+| Erreur 400 avec message | `toast.error` avec le message exact du serveur |
+| Erreur 400 sans message | `toast.error` avec le message par défaut |
+| Erreur 500 (crash serveur) | `toast.error` avec message générique — l'app ne plante pas |
+| Erreur réseau | `toast.error` avec message générique |
+
+---
+
 ## Tests E2E (Cypress)
 
 ### Lancer les tests E2E en mode headless (CI)

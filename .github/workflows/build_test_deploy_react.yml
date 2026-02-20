@@ -25,6 +25,9 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      REACT_APP_API_URL: https://jsonplaceholder.typicode.com
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,6 +88,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_test
 
+    env:
+      REACT_APP_API_URL: https://jsonplaceholder.typicode.com
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -95,8 +101,10 @@ jobs:
           working-directory: my-app
           start: npm start
           wait-on: 'http://localhost:3000'
-          browser: chrome
-          headed: false
+          wait-on-timeout: 60
+        env:
+          BROWSER: none
+          REACT_APP_API_URL: https://jsonplaceholder.typicode.com
 
       - name: Upload screenshots en cas d'échec
         uses: actions/upload-artifact@v4

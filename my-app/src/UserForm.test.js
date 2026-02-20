@@ -16,8 +16,8 @@ jest.mock('react-toastify', () => ({
 
 let mockAddUser;
 
-const renderUserForm = () => {
-  mockAddUser = jest.fn(() => Promise.resolve({ id: 11 }));
+const renderUserForm = (customAddUser = null) => {
+  mockAddUser = customAddUser || jest.fn(() => Promise.resolve({ id: 11 }));
   return render(
     <UsersContext.Provider value={{ users: [], addUser: mockAddUser, loading: false, error: null }}>
       <MemoryRouter>
@@ -25,6 +25,23 @@ const renderUserForm = () => {
       </MemoryRouter>
     </UsersContext.Provider>
   );
+};
+
+const fillValidForm = async (user) => {
+  await user.type(screen.getByLabelText(/^prénom/i), 'Jean');
+  await user.type(screen.getByLabelText(/^nom \*/i), 'Dupont');
+  await user.type(screen.getByLabelText(/^email/i), 'jean.dupont@example.com');
+  const validDate = new Date();
+  validDate.setFullYear(validDate.getFullYear() - 25);
+  await user.type(
+    screen.getByLabelText(/date de naissance/i),
+    validDate.toISOString().split('T')[0]
+  );
+  await user.type(screen.getByLabelText(/code postal/i), '75001');
+  await user.type(screen.getByLabelText(/^ville/i), 'Paris');
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: /soumettre/i })).not.toBeDisabled();
+  }, { timeout: 3000 });
 };
 
 describe('UserForm - Tests d\'intégration', () => {
@@ -416,28 +433,12 @@ describe('UserForm - Tests d\'intégration', () => {
       });
     });
 
-    test('soumet le formulaire avec succès, affiche le toast et réinitialise le formulaire', async () => {
+    test('soumet le formulaire avec succès (200/201) — affiche le toast succès et réinitialise', async () => {
       const { toast } = require('react-toastify');
       const user = userEvent.setup();
       renderUserForm();
 
-      await user.type(screen.getByLabelText(/^prénom/i), 'Jean');
-      await user.type(screen.getByLabelText(/^nom \*/i), 'Dupont');
-      await user.type(screen.getByLabelText(/^email/i), 'jean.dupont@example.com');
-
-      const validDate = new Date();
-      validDate.setFullYear(validDate.getFullYear() - 25);
-      await user.type(
-        screen.getByLabelText(/date de naissance/i),
-        validDate.toISOString().split('T')[0]
-      );
-      await user.type(screen.getByLabelText(/code postal/i), '75001');
-      await user.type(screen.getByLabelText(/^ville/i), 'Paris');
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /soumettre/i })).not.toBeDisabled();
-      }, { timeout: 3000 });
-
+      await fillValidForm(user);
       await user.click(screen.getByRole('button', { name: /soumettre/i }));
 
       await waitFor(() => {
@@ -447,9 +448,91 @@ describe('UserForm - Tests d\'intégration', () => {
         );
       });
 
-      // Le formulaire est réinitialisé après soumission réussie
       await waitFor(() => {
         expect(screen.getByLabelText(/^prénom/i)).toHaveValue('');
+      });
+    });
+  });
+
+  describe('Gestion des erreurs API', () => {
+    test('Erreur 400 — affiche le message spécifique du serveur (email déjà utilisé)', async () => {
+      const { toast } = require('react-toastify');
+      const user = userEvent.setup();
+
+      const error400 = {
+        response: {
+          status: 400,
+          data: { message: "L'email existe déjà." },
+        },
+      };
+      renderUserForm(jest.fn(() => Promise.reject(error400)));
+
+      await fillValidForm(user);
+      await user.click(screen.getByRole('button', { name: /soumettre/i }));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          "L'email existe déjà.",
+          expect.any(Object)
+        );
+      });
+
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    test('Erreur 400 sans message — affiche le message par défaut', async () => {
+      const { toast } = require('react-toastify');
+      const user = userEvent.setup();
+
+      const error400 = { response: { status: 400, data: {} } };
+      renderUserForm(jest.fn(() => Promise.reject(error400)));
+
+      await fillValidForm(user);
+      await user.click(screen.getByRole('button', { name: /soumettre/i }));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          expect.stringContaining("L'email existe déjà"),
+          expect.any(Object)
+        );
+      });
+    });
+
+    test('Erreur 500 (crash serveur) — affiche un message générique sans planter', async () => {
+      const { toast } = require('react-toastify');
+      const user = userEvent.setup();
+
+      const error500 = { response: { status: 500, data: {} } };
+      renderUserForm(jest.fn(() => Promise.reject(error500)));
+
+      await fillValidForm(user);
+      await user.click(screen.getByRole('button', { name: /soumettre/i }));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          expect.stringContaining('Erreur serveur'),
+          expect.any(Object)
+        );
+      });
+
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    test('Erreur réseau (pas de response) — affiche un message générique', async () => {
+      const { toast } = require('react-toastify');
+      const user = userEvent.setup();
+
+      const networkError = new Error('Network Error');
+      renderUserForm(jest.fn(() => Promise.reject(networkError)));
+
+      await fillValidForm(user);
+      await user.click(screen.getByRole('button', { name: /soumettre/i }));
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith(
+          expect.stringContaining('Erreur serveur'),
+          expect.any(Object)
+        );
       });
     });
   });
