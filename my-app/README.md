@@ -2,10 +2,12 @@
 
 [![Build, Test and Deploy](https://github.com/Ynov-Connect/TestUnitaireTP_Tom/actions/workflows/build_test_deploy_react.yml/badge.svg)](https://github.com/Ynov-Connect/TestUnitaireTP_Tom/actions/workflows/build_test_deploy_react.yml)
 [![codecov](https://codecov.io/gh/Ynov-Connect/TestUnitaireTP_Tom/branch/main/graph/badge.svg)](https://codecov.io/gh/Ynov-Connect/TestUnitaireTP_Tom)
+[![npm version](https://img.shields.io/npm/v/ynov-inscription-form.svg)](https://www.npmjs.com/package/ynov-inscription-form)
 
 - **Application** : [https://ynov-connect.github.io/TestUnitaireTP_Tom/](https://ynov-connect.github.io/TestUnitaireTP_Tom/)
 - **Documentation JSDoc** : [https://ynov-connect.github.io/TestUnitaireTP_Tom/docs/](https://ynov-connect.github.io/TestUnitaireTP_Tom/docs/)
 - **Couverture Codecov** : [https://codecov.io/gh/Ynov-Connect/TestUnitaireTP_Tom](https://codecov.io/gh/Ynov-Connect/TestUnitaireTP_Tom)
+- **Package npm** : [https://www.npmjs.com/package/ynov-inscription-form](https://www.npmjs.com/package/ynov-inscription-form)
 
 > Projet pédagogique Ynov – Tests Unitaires, Tests d'Intégration, Tests E2E et Pipeline CI/CD.
 
