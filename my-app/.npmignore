@@ -1,0 +1,15 @@
+src/
+public/
+node_modules/
+cypress/
+.github/
+coverage/
+build/
+.jest/
+*.test.js
+*.test.jsx
+*.spec.js
+*.spec.jsx
+.env*
+cypress.config.js
+babel.config.js
