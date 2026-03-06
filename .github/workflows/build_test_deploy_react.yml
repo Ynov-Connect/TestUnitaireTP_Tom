@@ -147,8 +147,26 @@ jobs:
         id: version-check
         run: |
           LOCAL_VERSION=$(node -p "require('./package.json').version")
-          NPM_VERSION=$(npm view ynov-inscription-form version 2>/dev/null || echo "0.0.0")
           echo "Version locale : $LOCAL_VERSION"
+
+          # Capturer stdout et stderr séparément pour distinguer les cas d'erreur
+          NPM_OUTPUT=$(npm view ynov-inscription-form version 2>&1)
+          NPM_EXIT=$?
+
+          if [ $NPM_EXIT -eq 0 ]; then
+            # Paquet existant — version récupérée avec succès
+            NPM_VERSION=$NPM_OUTPUT
+          elif echo "$NPM_OUTPUT" | grep -qE "E404|is not in this registry|Not found"; then
+            # Paquet jamais publié — cas légitime de première publication
+            NPM_VERSION="0.0.0"
+            echo "Paquet non trouvé sur npm (première publication)"
+          else
+            # Erreur inattendue (réseau, registre indisponible, etc.) — on échoue explicitement
+            echo "Erreur lors de la récupération de la version npm :"
+            echo "$NPM_OUTPUT"
+            exit 1
+          fi
+
           echo "Version publiée sur npm : $NPM_VERSION"
           IS_GREATER=$(node -e "
             const toArr = v => v.split('.').map(Number);
@@ -159,9 +177,9 @@ jobs:
           ")
           echo "should_publish=$IS_GREATER" >> $GITHUB_OUTPUT
           if [ "$IS_GREATER" = "true" ]; then
-            echo "✅ Nouvelle version détectée ($LOCAL_VERSION > $NPM_VERSION) — publication en cours."
+            echo "Nouvelle version détectée ($LOCAL_VERSION > $NPM_VERSION) — publication en cours."
           else
-            echo "⏭️ Aucune nouvelle version ($LOCAL_VERSION = $NPM_VERSION) — publication ignorée."
+            echo "Aucune nouvelle version ($LOCAL_VERSION = $NPM_VERSION) — publication ignorée."
           fi
 
       - name: Build du package npm
@@ -175,7 +193,85 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # ============================================================
-  # Job 4 : Déploiement GitHub Pages — nécessite publish-npm OK
+  # Job 4 : Build, Validation API & Push Docker Hub
+  # ============================================================
+  validate_and_push:
+    name: Build, Validate API & Push to Docker Hub
+    runs-on: ubuntu-latest
+    needs: publish-npm
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build image MySQL
+        run: docker build -t ynov-mysql:latest .
+
+      - name: Build image API Python
+        run: docker build -f Dockerfile.api -t ynov-api:latest .
+
+      - name: Creer le reseau Docker
+        run: docker network create ynov-net
+
+      - name: Lancer le conteneur MySQL
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        run: |
+          docker run -d \
+            --name mysql-container \
+            --network ynov-net \
+            -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" \
+            -e MYSQL_DATABASE=ynov_ci \
+            ynov-mysql:latest
+
+      - name: Attendre l'initialisation de MySQL
+        run: sleep 30
+
+      - name: Lancer le conteneur API
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        run: |
+          docker run -d \
+            --name api-container \
+            --network ynov-net \
+            -p 8000:8000 \
+            -e MYSQL_HOST=mysql-container \
+            -e MYSQL_USER=root \
+            -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" \
+            -e MYSQL_DATABASE=ynov_ci \
+            ynov-api:latest
+
+      - name: Attendre le demarrage de l'API
+        run: sleep 10
+
+      - name: Validation de l'endpoint /users via curl
+        run: |
+          HTTP_CODE=$(curl -s -o response.json -w "%{http_code}" http://localhost:8000/users)
+          echo "HTTP Code: $HTTP_CODE"
+          cat response.json
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "ECHEC : code HTTP attendu 200, recu $HTTP_CODE"
+            exit 1
+          fi
+          NB_USERS=$(python3 -c "import sys,json; d=json.load(open('response.json')); print(len(d.get('utilisateurs', [])))")
+          echo "Nombre d'utilisateurs : $NB_USERS"
+          if [ "$NB_USERS" = "0" ]; then
+            echo "ECHEC : la liste utilisateurs est vide"
+            exit 1
+          fi
+          echo "SUCCES : $NB_USERS utilisateur(s) retourne(s)"
+
+      - name: Connexion a Docker Hub
+        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Tag et push de l'image API vers Docker Hub
+        run: |
+          docker tag ynov-api:latest ${{ secrets.DOCKER_USERNAME }}/ynov-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/ynov-api:latest
+
+  # ============================================================
+  # Job 5 : Déploiement GitHub Pages — nécessite publish-npm OK
   # (s'exécute même si publish-npm a été ignoré)
   # ============================================================
   deploy:
