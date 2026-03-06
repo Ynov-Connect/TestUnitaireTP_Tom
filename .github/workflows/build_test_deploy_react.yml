@@ -222,11 +222,27 @@ jobs:
             --name mysql-container \
             --network ynov-net \
             -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" \
-            -e MYSQL_DATABASE=ynov_ci \
             ynov-mysql:latest
 
-      - name: Attendre l'initialisation de MySQL
-        run: sleep 30
+      - name: Attendre que MySQL soit pret et initialise (table utilisateur presente)
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        run: |
+          echo "Attente de MySQL + migrations..."
+          for i in $(seq 1 30); do
+            if docker exec mysql-container mysql -uroot -p"$MYSQL_ROOT_PASSWORD" \
+                -e "SELECT COUNT(*) FROM ynov_ci.utilisateur;" 2>/dev/null; then
+              echo "MySQL pret apres ${i}x2s"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "MySQL non pret apres 60s"
+              docker logs mysql-container
+              exit 1
+            fi
+            echo "Tentative $i/30..."
+            sleep 2
+          done
 
       - name: Lancer le conteneur API
         env:
@@ -242,8 +258,22 @@ jobs:
             -e MYSQL_DATABASE=ynov_ci \
             ynov-api:latest
 
-      - name: Attendre le demarrage de l'API
-        run: sleep 10
+      - name: Attendre que l'API reponde (curl retry)
+        run: |
+          echo "Attente de l'API..."
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:8000/users > /dev/null 2>&1; then
+              echo "API prete apres ${i}x2s"
+              break
+            fi
+            if [ $i -eq 15 ]; then
+              echo "API non accessible apres 30s"
+              docker logs api-container
+              exit 1
+            fi
+            echo "Tentative $i/15..."
+            sleep 2
+          done
 
       - name: Validation de l'endpoint /users via curl
         run: |
@@ -261,6 +291,16 @@ jobs:
             exit 1
           fi
           echo "SUCCES : $NB_USERS utilisateur(s) retourne(s)"
+
+      - name: Debug logs en cas d'echec
+        if: failure()
+        run: |
+          echo "=== Logs MySQL ==="
+          docker logs mysql-container || true
+          echo "=== Logs API ==="
+          docker logs api-container || true
+          echo "=== Etat des conteneurs ==="
+          docker ps -a
 
       - name: Connexion a Docker Hub
         run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
