@@ -1,0 +1,8 @@
+# Fichiers à exclure du build Docker
+*.log
+node_modules
+.env
+.git
+.gitignore
+*.md
+*.pdf
