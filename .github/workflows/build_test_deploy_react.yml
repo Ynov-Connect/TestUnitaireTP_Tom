@@ -222,6 +222,8 @@ jobs:
             --name mysql-container \
             --network ynov-net \
             -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" \
+            -e MYSQL_DATABASE=ynov_ci \
+            -v "$(pwd)/sqlfiles:/docker-entrypoint-initdb.d" \
             ynov-mysql:latest
 
       - name: Attendre que MySQL soit pret et initialise (table utilisateur presente)
