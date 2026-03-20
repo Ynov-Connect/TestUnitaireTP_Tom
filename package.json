@@ -9,7 +9,11 @@
     "test:coverage": "jest --coverage",
     "doc": "jsdoc -c jsdoc.json"
   },
-  "keywords": ["validation", "tdd", "jest"],
+  "keywords": [
+    "validation",
+    "tdd",
+    "jest"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {

@@ -1,6 +1,11 @@
-# Fichiers à exclure du build Docker
-*.log
 node_modules
+build
+.dockerignore
+Dockerfile
+DockerfileReact
+Dockerfile.api
+my-app/node_modules
+*.log
 .env
 .git
 .gitignore

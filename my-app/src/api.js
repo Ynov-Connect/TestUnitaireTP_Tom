@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://jsonplaceholder.typicode.com';
+const port = process.env.REACT_APP_SERVER_PORT;
+const API_URL = port
+  ? `http://localhost:${port}`
+  : (process.env.REACT_APP_API_URL || 'https://jsonplaceholder.typicode.com');
 
 /**
  * Récupère la liste de tous les utilisateurs depuis l'API.
@@ -8,6 +11,14 @@ const API_URL = process.env.REACT_APP_API_URL || 'https://jsonplaceholder.typico
  */
 export const getUsers = async () => {
   const response = await axios.get(`${API_URL}/users`);
+  // Si la réponse contient une structure de données spécifique, on la transforme en objets utilisateur
+  if (response.data && response.data.utilisateurs) {
+    return response.data.utilisateurs.map((u) =>
+      Array.isArray(u)
+        ? { id: u[0], name: u[1], email: u[2], date_creation: u[3] }
+        : u
+    );
+  }
   return response.data;
 };
 
