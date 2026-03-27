@@ -121,6 +121,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: my-app/package-lock.json
 
+      - name: Corriger les permissions (node_modules créé par Docker)
+        run: sudo chown -R $(id -u):$(id -g) my-app/node_modules || true
+
       - name: Installer les dépendances Cypress
         working-directory: my-app
         run: npm ci
